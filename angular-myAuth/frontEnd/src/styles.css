@@ -1,0 +1,41 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+    background: #E7F4FD;
+}
+
+.pAuth {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.navbar-custom {
+    background-color: #3291ff;
+}
+
+.button-custom {
+    background-color: #3291ff;
+    color: whitesmoke;
+}
+
+.table-dark {
+    background-color: #3e444a;
+}
+
+.table {
+    border-radius: 6px;
+    background-color: #3e444a;
+    color: whitesmoke;
+}
+
+.table thead th, .table tbody td{
+    border: none;
+}
+
+.widthCls {
+    width:70%; 
+    margin-left:15%; 
+    margin-right:15%;
+}
+
+
+

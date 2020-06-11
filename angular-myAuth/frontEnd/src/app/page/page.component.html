@@ -1,0 +1,186 @@
+<div class="widthCls">
+<p class="pAuth">{{typeAuth}}</p>
+    <h2>Apps Data</h2>
+    <table class="table">
+        <thead>
+          <tr>
+            <th *ngFor="let column of headers">{{column}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let data of tableDataArray">
+            <td>{{data.id}}</td>
+            <td>{{data.name}}</td>
+            <td>{{data.host}}</td>
+            <!-- <td>{{data.description}}</td> -->
+            <td>{{data.db_host}}</td>
+            <td>{{data.db_user}}</td>
+            <!-- <td>{{data.db_password}}</td> -->
+            <td>{{data.db_name}}</td>
+            <!-- <td>{{data.jwt_secret2}}</td> -->
+            <td>{{data.company_id}}</td>
+            <!-- <td>{{data.enabled}}</td> -->
+            <td>{{data.server_id}}</td>
+            <!-- <a (click)="putData(data.id)" data-toggle="modal" data-target="#modalUpdate"> <img src="../../assets/edit.png" class="iconEd"></a> -->
+            <!-- <a (click)="deleteData(data.id, data.name)"><img src="../../assets/delete.png" class="iconDel"></a> -->
+            <div class="btnStyle">
+            <button (click)="putData(data.id)" data-toggle="modal" data-target="#modalUpdate" class="btnEd"><i class="fas fa-pencil-alt"></i></button>
+            <button (click)="deleteData(data.id, data.name)" class="btnDel"><i class="far fa-trash-alt"></i></button>
+            </div>
+           </tr>
+        </tbody>
+      </table>
+    </div>
+
+      <div class="center">
+      <button type="button" class="btn button-custom center" data-toggle="modal" data-target="#modalAdd">Add Data</button>
+      </div>
+
+  <!-- Modal Update-->
+<div class="modal fade" id="modalUpdate" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content" *ngFor="let data of putArray">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Edit App Data</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" name="name" placeholder="Name" [(ngModel)]="data.name">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="host">Host</label>
+              <input type="text" class="form-control" name="host" placeholder="Host" [(ngModel)]="data.host">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="description">Description</label>
+              <input type="text" class="form-control" name="description" [(ngModel)]="data.description" placeholder="Description">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="dbHost">dbHost</label>
+            <input type="text" class="form-control" name="dbHost" [(ngModel)]="data.db_host" placeholder="dbHost">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="dbUser">dbUser</label>
+              <input type="text" class="form-control" name="dbUser" [(ngModel)]="data.db_user" placeholder="dbUser">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="dbPassword">dbPassword</label>
+              <input type="text" class="form-control" name="dbPassword" [(ngModel)]="data.db_password" placeholder="dbPassword">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="dbName">dbName</label>
+              <input type="text" class="form-control" name="dbName" [(ngModel)]="data.db_name" placeholder="dbName">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="jwtSecret2">jwtSecret2</label>
+              <input type="text" class="form-control" name="jwtSecret2" [(ngModel)]="data.jwt_secret2" placeholder="jwtSecret2">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="companyId">Company ID</label>
+              <input type="number" class="form-control" name="companyId" [(ngModel)]="data.company_id" >
+          </div>
+          <div class="form-group col-md-6">
+              <label for="enabled">Enabled</label>
+              <input type="number" class="form-control" name="enabled" [(ngModel)]="data.enabled" >
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="serverId">Server ID</label>
+          <input type="number" class="form-control" name="serverId" [(ngModel)]="data.server_id" >
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn button-custom" (click)="putDataApp(data.id)">Edit Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Modal Add-->
+<div class="modal fade" id="modalAdd" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add App Data</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" name="name" placeholder="Name" [(ngModel)]="postArray.name">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="host">Host</label>
+              <input type="text" class="form-control" name="host" placeholder="Host" [(ngModel)]="postArray.host">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="description">Description</label>
+              <input type="text" class="form-control" name="description" [(ngModel)]="postArray.description" placeholder="Description">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="dbHost">dbHost</label>
+            <input type="text" class="form-control" name="dbHost" [(ngModel)]="postArray.dbHost" placeholder="dbHost">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="dbUser">dbUser</label>
+              <input type="text" class="form-control" name="dbUser" [(ngModel)]="postArray.dbUser" placeholder="dbUser">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="dbPassword">dbPassword</label>
+              <input type="text" class="form-control" name="dbPassword" [(ngModel)]="postArray.dbPassword" placeholder="dbPassword">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="dbName">dbName</label>
+              <input type="text" class="form-control" name="dbName" [(ngModel)]="postArray.dbName" placeholder="dbName">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="jwtSecret2">jwtSecret2</label>
+              <input type="text" class="form-control" name="jwtSecret2" [(ngModel)]="postArray.jwtSecret2" placeholder="jwtSecret2">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+              <label for="companyId">Company ID</label>
+              <input type="number" class="form-control" name="companyId" [(ngModel)]="postArray.companyId">
+          </div>
+          <div class="form-group col-md-6">
+              <label for="enabled">Enabled</label>
+              <input type="number" class="form-control" name="enabled" [(ngModel)]="postArray.enabled">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="serverId">Server ID</label>
+          <input type="number" class="form-control" name="serverId" [(ngModel)]="postArray.serverId">
+        </div>
+      </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn button-custom" (click)="postDataApp()">Add Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+

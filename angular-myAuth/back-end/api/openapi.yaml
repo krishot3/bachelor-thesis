@@ -1,0 +1,2196 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: api@nsoric.com
+  description: 'API pre riešenie zberu a prístupu k údajom v meracom systéme nSoric.  Riešenie
+    má 2 základné časti: AUTH API a DATA API. AUTH API poskytuje funkciu overenia
+    používateľa a sprístupnenie dostupných meracích aplikácií. Meracia aplikácia je
+    definovaná ako riešenie, ktoré sa skladá s hardvérovej časti (zber údajov), služby
+    ukladania dát a služby prístupu k dátam (DATA API).'
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Measurement system API
+  version: "2.0"
+servers:
+- url: http://localhost:3000/nsoric/
+security:
+- BasicAuth: []
+tags:
+- description: Authorization and related methods
+  name: Auth
+paths:
+  /auth/login/:
+    post:
+      description: First action have to be authorized to access to other parts of
+        System. Response contains of JWT toket, that have to be usen in header o each
+        of next messages. This is first step in login process. This step can not be
+        skipped.
+      operationId: authLoginPOST
+      parameters:
+      - description: login to system
+        example: juraj
+        explode: false
+        in: header
+        name: login
+        required: true
+        schema:
+          maxLength: 64
+          type: string
+        style: simple
+      - description: user's password
+        example: myV3ry5tr0ngPa5sw0rd
+        explode: false
+        in: header
+        name: password
+        required: true
+        schema:
+          format: password
+          maxLength: 128
+          type: string
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserObject'
+          description: User was successfully logged
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Bad request, invalid request message parameters or deceptive
+            request routing
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: API can’t map the client’s URI to a resource but may be available
+            in the future
+        501:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Database corupted, or down
+      security: []
+      summary: Login to system
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/user/:
+    get:
+      description: Return list of all users as objects. Action is allowed for SystemAdmin
+        only.
+      operationId: authUserGET
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LoginUser'
+                maxItems: 100
+                type: array
+          description: User was successfully logged
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Invalid request message parameters
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get list of all users
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    post:
+      description: Adding new user to database
+      operationId: authUserPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUser'
+        required: true
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUser'
+          description: New user was successfully created
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Invalid request parameter
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Add new user
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/user/{login}:
+    delete:
+      description: Delete user.With deleting user, the userRoels is also deleted
+      operationId: authUserLoginDELETE
+      parameters:
+      - description: User login
+        explode: false
+        in: path
+        name: login
+        required: true
+        schema:
+          example: juraj
+          maxLength: 32
+          type: string
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUser'
+          description: User was successfully deleted. In rensponse is AppUser structure
+            - user to be deleted in DATA API
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: User with specific id wasn't find
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Delete user
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    get:
+      description: 'Return users related objects: allowed applications, user details.
+        User have to be authentificated by /auth/login/ first.'
+      operationId: authUserLoginGET
+      parameters:
+      - description: Users login
+        explode: false
+        in: path
+        name: login
+        required: true
+        schema:
+          example: juraj@nsoric.com
+          type: string
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUser'
+          description: User was successfully logged
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Invalid request message parameters
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get user detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    put:
+      description: Update user datails. All item s in data structure 'user' is optional.
+        If is not provided, there wil be no change with this field.
+      operationId: authUserLoginPUT
+      parameters:
+      - description: User ID
+        explode: false
+        in: path
+        name: login
+        required: true
+        schema:
+          example: 1
+          type: number
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUser'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: User was successfully changed
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: API can’t map the client’s URI, that means user does not exist
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Update user detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/company/:
+    get:
+      description: Get list of all companies is allowed only for admin
+      operationId: authCompanyGET
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LoginCompany'
+                maxItems: 100
+                type: array
+          description: API return list of all companies
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get list of all companies.
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    post:
+      description: Store new company detail in Login database
+      operationId: authCompanyPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCompany'
+        required: true
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Company was successfully saved
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Store new company detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/company/{id}:
+    get:
+      description: Return company details based on ID
+      operationId: authCompanyIdGET
+      parameters:
+      - description: Company ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 10
+          type: number
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginCompany'
+          description: API return company detail information
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get company detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    put:
+      description: Edit company details. Parts, whitch will be not included, will
+        be not modified.
+      operationId: authCompanyIdPUT
+      parameters:
+      - description: Company ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 1
+          type: number
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginCompany'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Comapny was successfully changed
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Non-exist company
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Edit company detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/user/company/:
+    delete:
+      description: Remove existing user from existing company
+      operationId: authUserCompanyDELETE
+      parameters:
+      - description: ID of existing user
+        explode: false
+        in: header
+        name: id_user
+        required: true
+        schema:
+          example: 1
+          type: number
+        style: simple
+      - description: ID of existing company
+        explode: false
+        in: header
+        name: id_company
+        required: true
+        schema:
+          example: 10
+          type: number
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: User was successfully removed from company
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Remove user from company
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    get:
+      description: Remove existing user from existing company
+      operationId: authUserCompanyGET
+      parameters:
+      - description: ID of existing company
+        explode: false
+        in: header
+        name: id_company
+        required: true
+        schema:
+          example: 10
+          type: number
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LoginUser'
+                maxItems: 500
+                type: array
+          description: User was successfully removed from company
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get list of users related to company
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    post:
+      description: Add existing user to existing company and define user rights
+      operationId: authUserCompanyPOST
+      requestBody:
+        $ref: '#/components/requestBodies/inline_object'
+        content:
+          application/json:
+            schema:
+              properties:
+                id_user:
+                  example: 1
+                  type: number
+                id_company:
+                  example: 10
+                  type: number
+              type: object
+        description: Body of POST method with id properties
+        required: true
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: User was successfully added to company
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Add user to company
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/company/application/{id}:
+    get:
+      description: Allowed only for system admin
+      operationId: authCompanyApplicationIdGET
+      parameters:
+      - description: ID of existing company
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 10
+          type: number
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LoginApplication'
+                maxItems: 100
+                type: array
+          description: Return list of company related applications
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get list of company applications
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/company/application/:
+    delete:
+      description: Remove existing application from exiting company
+      operationId: authCompanyApplicationDELETE
+      parameters:
+      - description: ID of existing company
+        explode: false
+        in: header
+        name: id_company
+        required: true
+        schema:
+          example: 10
+          type: number
+        style: simple
+      - description: ID of existing application
+        explode: false
+        in: header
+        name: id_application
+        required: true
+        schema:
+          example: 15
+          type: number
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Application succefully removed from company
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Remove application from company
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/application/{id}:
+    delete:
+      description: Delete application details. Only for system admin.
+      operationId: authApplicationIdDELETE
+      parameters:
+      - description: application ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 10
+          type: integer
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Application deleted
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Delete application detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    get:
+      description: Return application details. Only for system admin.
+      operationId: authApplicationIdGET
+      parameters:
+      - description: ID of application
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 10
+          type: integer
+        style: simple
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginApplication'
+          description: Application detail information
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Get application detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+    put:
+      description: Edit  application details. Only for system admin.
+      operationId: authApplicationIdPUT
+      parameters:
+      - description: application ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: 10
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginApplication'
+        required: true
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Application changed
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Non-exist application
+      summary: Edit application detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+  /auth/application/:
+    post:
+      description: Return application details. Only for system admin.
+      operationId: authApplicationPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginApplication'
+        required: true
+      responses:
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Application inserted
+        400:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateResponse'
+          description: Incomplete source information
+        401:
+          description: User tried to operate on a protected resource without providing
+            the proper authorization
+          headers:
+            X-API-key:
+              description: API key
+              explode: false
+              schema:
+                maxLength: 128
+                type: string
+              style: simple
+        403:
+          description: User does not have the necessary permissions for the resource
+      summary: Save new application detail
+      tags:
+      - Auth
+      x-openapi-router-controller: AuthController
+      x-openapi-router-service: AuthService
+components:
+  requestBodies:
+    inline_object:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/inline_object'
+      required: true
+  responses:
+    PrivilegiesError:
+      description: User does not have the necessary permissions for the resource
+    UnauthorizedError:
+      description: User tried to operate on a protected resource without providing
+        the proper authorization
+      headers:
+        X-API-key:
+          description: API key
+          explode: false
+          schema:
+            maxLength: 128
+            type: string
+          style: simple
+  schemas:
+    LoginCompany:
+      example:
+        zipCode: 91724
+        country: Slovakia
+        address: Bottova 10
+        userRights:
+          companyId: 12
+          id: 1
+          position: CEO
+          userId: 1
+        city: Trnava
+        phone: 9012 548 951
+        name: MTF
+        id: 10
+        jwtSecret1: fasasvap24
+        email: juraj.dudak@stuba.sk
+        enabled: 1
+        applications:
+        - schema: http
+          applicaton: mtf.nsoric.com
+          server:
+            endpoint: api2
+            apiPort: 81
+            thisInstance: 1
+            name: saturn
+            id: 8
+            apiSchema: https
+          name: home measurement
+          host: dudak.nsoric.com
+          dbUser: server_user
+          dbHost: localhost
+          jwtSecret2: KJHGFFTYUJHBV
+          enabled: 1
+          dbPassword: SECRET_DB_PASSWORD
+        - schema: http
+          applicaton: mtf.nsoric.com
+          server:
+            endpoint: api2
+            apiPort: 81
+            thisInstance: 1
+            name: saturn
+            id: 8
+            apiSchema: https
+          name: home measurement
+          host: dudak.nsoric.com
+          dbUser: server_user
+          dbHost: localhost
+          jwtSecret2: KJHGFFTYUJHBV
+          enabled: 1
+          dbPassword: SECRET_DB_PASSWORD
+        - schema: http
+          applicaton: mtf.nsoric.com
+          server:
+            endpoint: api2
+            apiPort: 81
+            thisInstance: 1
+            name: saturn
+            id: 8
+            apiSchema: https
+          name: home measurement
+          host: dudak.nsoric.com
+          dbUser: server_user
+          dbHost: localhost
+          jwtSecret2: KJHGFFTYUJHBV
+          enabled: 1
+          dbPassword: SECRET_DB_PASSWORD
+        - schema: http
+          applicaton: mtf.nsoric.com
+          server:
+            endpoint: api2
+            apiPort: 81
+            thisInstance: 1
+            name: saturn
+            id: 8
+            apiSchema: https
+          name: home measurement
+          host: dudak.nsoric.com
+          dbUser: server_user
+          dbHost: localhost
+          jwtSecret2: KJHGFFTYUJHBV
+          enabled: 1
+          dbPassword: SECRET_DB_PASSWORD
+        - schema: http
+          applicaton: mtf.nsoric.com
+          server:
+            endpoint: api2
+            apiPort: 81
+            thisInstance: 1
+            name: saturn
+            id: 8
+            apiSchema: https
+          name: home measurement
+          host: dudak.nsoric.com
+          dbUser: server_user
+          dbHost: localhost
+          jwtSecret2: KJHGFFTYUJHBV
+          enabled: 1
+          dbPassword: SECRET_DB_PASSWORD
+      properties:
+        id:
+          description: ID of company
+          example: 10
+          type: number
+        name:
+          description: name of company
+          example: MTF
+          type: string
+        address:
+          description: address of company
+          example: Bottova 10
+          type: string
+        city:
+          description: city of company
+          example: Trnava
+          type: string
+        zipCode:
+          description: ZIP code of company
+          example: 91724
+          type: number
+        country:
+          description: country of company
+          example: Slovakia
+          type: string
+        email:
+          description: email of company
+          example: juraj.dudak@stuba.sk
+          type: string
+        phone:
+          description: phone of company
+          example: 9012 548 951
+          type: string
+        enabled:
+          description: information about enabled account
+          example: 1
+          type: number
+        jwtSecret1:
+          description: first part of JWT secret
+          example: fasasvap24
+          type: string
+        applications:
+          description: list of existing applications for company
+          items:
+            $ref: '#/components/schemas/LoginApplication'
+          maxItems: 16
+          type: array
+        userRights:
+          $ref: '#/components/schemas/LoginUserCompany'
+      type: object
+    LoginServer:
+      example:
+        endpoint: api2
+        apiPort: 81
+        thisInstance: 1
+        name: saturn
+        id: 8
+        apiSchema: https
+      properties:
+        id:
+          description: ID of port
+          example: 8
+          type: number
+        name:
+          description: server name (not address)
+          example: saturn
+          type: string
+        apiSchema:
+          description: 'used schema for API: http, https'
+          example: https
+          type: string
+        apiPort:
+          description: TCP port to connect server
+          example: 81
+          type: number
+        endpoint:
+          description: endpoint of application API
+          example: api2
+          type: string
+        thisInstance:
+          description: flag, that tells which server is used in actual instance. Only
+            one row can have value 1
+          example: 1
+          type: integer
+      type: object
+    LoginApplication:
+      example:
+        schema: http
+        applicaton: mtf.nsoric.com
+        server:
+          endpoint: api2
+          apiPort: 81
+          thisInstance: 1
+          name: saturn
+          id: 8
+          apiSchema: https
+        name: home measurement
+        host: dudak.nsoric.com
+        dbUser: server_user
+        dbHost: localhost
+        jwtSecret2: KJHGFFTYUJHBV
+        enabled: 1
+        dbPassword: SECRET_DB_PASSWORD
+      properties:
+        name:
+          description: human friendly name of measurement instance
+          example: home measurement
+          type: string
+        host:
+          description: Host of application
+          example: dudak.nsoric.com
+          type: string
+        schema:
+          description: connection schema:http or https
+          example: http
+          type: string
+        enabled:
+          description: 'status of appication: 1 - OK, 0 - disabled'
+          example: 1
+          type: integer
+        dbHost:
+          description: Name of host that serve configuration
+          example: localhost
+          type: string
+        dbUser:
+          description: Authorized user to access to configuration
+          example: server_user
+          type: string
+        dbPassword:
+          description: Database password for dbUser
+          example: SECRET_DB_PASSWORD
+          type: string
+        applicaton:
+          description: Database name to stare whole application (measurement system)
+          example: mtf.nsoric.com
+          type: string
+        jwtSecret2:
+          description: second part of JWT secret
+          example: KJHGFFTYUJHBV
+          type: string
+        server:
+          $ref: '#/components/schemas/LoginServer'
+      type: object
+    LoginUser:
+      example:
+        password: asfas54f5as4fasf4a6s54fa
+        firstname: Juraj
+        companies:
+        - zipCode: 91724
+          country: Slovakia
+          address: Bottova 10
+          userRights:
+            companyId: 12
+            id: 1
+            position: CEO
+            userId: 1
+          city: Trnava
+          phone: 9012 548 951
+          name: MTF
+          id: 10
+          jwtSecret1: fasasvap24
+          email: juraj.dudak@stuba.sk
+          enabled: 1
+          applications:
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+        - zipCode: 91724
+          country: Slovakia
+          address: Bottova 10
+          userRights:
+            companyId: 12
+            id: 1
+            position: CEO
+            userId: 1
+          city: Trnava
+          phone: 9012 548 951
+          name: MTF
+          id: 10
+          jwtSecret1: fasasvap24
+          email: juraj.dudak@stuba.sk
+          enabled: 1
+          applications:
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+          - schema: http
+            applicaton: mtf.nsoric.com
+            server:
+              endpoint: api2
+              apiPort: 81
+              thisInstance: 1
+              name: saturn
+              id: 8
+              apiSchema: https
+            name: home measurement
+            host: dudak.nsoric.com
+            dbUser: server_user
+            dbHost: localhost
+            jwtSecret2: KJHGFFTYUJHBV
+            enabled: 1
+            dbPassword: SECRET_DB_PASSWORD
+        surname: Ďuďák
+        id: 1
+        isAdmin: 1
+        login: juraj.dudak
+        enabled: 1
+      properties:
+        id:
+          description: ID of user
+          example: 1
+          type: number
+        login:
+          description: user login
+          example: juraj.dudak
+          type: string
+        password:
+          description: HASH of user password. Use SHA2 algorithm
+          example: asfas54f5as4fasf4a6s54fa
+          type: string
+        enabled:
+          description: enable/disable user (0/1)
+          example: 1
+          type: number
+        firstname:
+          description: user name
+          example: Juraj
+          type: string
+        surname:
+          description: user surname
+          example: Ďuďák
+          type: string
+        isAdmin:
+          description: User with root privilegies
+          example: 1
+          type: number
+        companies:
+          items:
+            $ref: '#/components/schemas/LoginCompany'
+          type: array
+      type: object
+    LoginUserCompany:
+      example:
+        companyId: 12
+        id: 1
+        position: CEO
+        userId: 1
+      properties:
+        id:
+          description: ID of record
+          example: 1
+          type: number
+        companyId:
+          description: ID of company
+          example: 12
+          type: number
+        userId:
+          description: ID of user
+          example: 1
+          type: number
+        position:
+          description: position in company
+          example: CEO
+          type: string
+      type: object
+    AppGroup:
+      example:
+        allowView: 1
+        allowManage: 1
+        allowAdministration: 0
+        name: mainteiner
+      properties:
+        name:
+          example: mainteiner
+          type: string
+        allowView:
+          example: 1
+          type: integer
+        allowManage:
+          example: 1
+          type: integer
+        allowAdministration:
+          example: 0
+          type: integer
+      type: object
+    AppUser:
+      example:
+        firstname: Juraj
+        surname: Ďuďák
+        areas:
+        - sectors:
+          - sensors:
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            name: outddor sector
+            id: 0
+          - sensors:
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            name: outddor sector
+            id: 0
+          name: area 51
+          id: 5
+        - sectors:
+          - sensors:
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            name: outddor sector
+            id: 0
+          - sensors:
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            - uid: 12adc021980cbfe9
+              min_value: 1.4658129805029452
+              level: 6.027456183070403
+              type_id:
+                type2_id:
+                  text: text
+                  type1: 12
+                type3: 2
+                minimalValue: -20
+                type1_id:
+                  unit: hmotnost
+                  text: text
+                  type1: 11
+                  unitSI: kg
+                maximalValue: 80
+                id: 13
+                text: text
+              name: vlhkomer
+              max_value: 5.962133916683182
+            name: outddor sector
+            id: 0
+          name: area 51
+          id: 5
+        id: 1
+        login: juraj.dudak
+        group:
+          allowView: 1
+          allowManage: 1
+          allowAdministration: 0
+          name: mainteiner
+      properties:
+        id:
+          description: ID of user
+          example: 1
+          type: number
+        login:
+          description: user login
+          example: juraj.dudak
+          type: string
+        firstname:
+          description: user name
+          example: Juraj
+          type: string
+        surname:
+          description: user surname
+          example: Ďuďák
+          type: string
+        group:
+          $ref: '#/components/schemas/AppGroup'
+        areas:
+          items:
+            $ref: '#/components/schemas/AppArea'
+          type: array
+      type: object
+    AppArea:
+      example:
+        sectors:
+        - sensors:
+          - uid: 12adc021980cbfe9
+            min_value: 1.4658129805029452
+            level: 6.027456183070403
+            type_id:
+              type2_id:
+                text: text
+                type1: 12
+              type3: 2
+              minimalValue: -20
+              type1_id:
+                unit: hmotnost
+                text: text
+                type1: 11
+                unitSI: kg
+              maximalValue: 80
+              id: 13
+              text: text
+            name: vlhkomer
+            max_value: 5.962133916683182
+          - uid: 12adc021980cbfe9
+            min_value: 1.4658129805029452
+            level: 6.027456183070403
+            type_id:
+              type2_id:
+                text: text
+                type1: 12
+              type3: 2
+              minimalValue: -20
+              type1_id:
+                unit: hmotnost
+                text: text
+                type1: 11
+                unitSI: kg
+              maximalValue: 80
+              id: 13
+              text: text
+            name: vlhkomer
+            max_value: 5.962133916683182
+          name: outddor sector
+          id: 0
+        - sensors:
+          - uid: 12adc021980cbfe9
+            min_value: 1.4658129805029452
+            level: 6.027456183070403
+            type_id:
+              type2_id:
+                text: text
+                type1: 12
+              type3: 2
+              minimalValue: -20
+              type1_id:
+                unit: hmotnost
+                text: text
+                type1: 11
+                unitSI: kg
+              maximalValue: 80
+              id: 13
+              text: text
+            name: vlhkomer
+            max_value: 5.962133916683182
+          - uid: 12adc021980cbfe9
+            min_value: 1.4658129805029452
+            level: 6.027456183070403
+            type_id:
+              type2_id:
+                text: text
+                type1: 12
+              type3: 2
+              minimalValue: -20
+              type1_id:
+                unit: hmotnost
+                text: text
+                type1: 11
+                unitSI: kg
+              maximalValue: 80
+              id: 13
+              text: text
+            name: vlhkomer
+            max_value: 5.962133916683182
+          name: outddor sector
+          id: 0
+        name: area 51
+        id: 5
+      properties:
+        id:
+          example: 5
+          format: uuid
+          type: integer
+        name:
+          example: area 51
+          type: string
+        sectors:
+          items:
+            $ref: '#/components/schemas/AppSector'
+          type: array
+      required:
+      - name
+      type: object
+    AppSector:
+      example:
+        sensors:
+        - uid: 12adc021980cbfe9
+          min_value: 1.4658129805029452
+          level: 6.027456183070403
+          type_id:
+            type2_id:
+              text: text
+              type1: 12
+            type3: 2
+            minimalValue: -20
+            type1_id:
+              unit: hmotnost
+              text: text
+              type1: 11
+              unitSI: kg
+            maximalValue: 80
+            id: 13
+            text: text
+          name: vlhkomer
+          max_value: 5.962133916683182
+        - uid: 12adc021980cbfe9
+          min_value: 1.4658129805029452
+          level: 6.027456183070403
+          type_id:
+            type2_id:
+              text: text
+              type1: 12
+            type3: 2
+            minimalValue: -20
+            type1_id:
+              unit: hmotnost
+              text: text
+              type1: 11
+              unitSI: kg
+            maximalValue: 80
+            id: 13
+            text: text
+          name: vlhkomer
+          max_value: 5.962133916683182
+        name: outddor sector
+        id: 0
+      properties:
+        id:
+          format: uuid
+          type: integer
+        name:
+          example: outddor sector
+          type: string
+        sensors:
+          items:
+            $ref: '#/components/schemas/AppSensor'
+          type: array
+      required:
+      - id
+      - name
+      type: object
+    AppSensor:
+      example:
+        uid: 12adc021980cbfe9
+        min_value: 1.4658129805029452
+        level: 6.027456183070403
+        type_id:
+          type2_id:
+            text: text
+            type1: 12
+          type3: 2
+          minimalValue: -20
+          type1_id:
+            unit: hmotnost
+            text: text
+            type1: 11
+            unitSI: kg
+          maximalValue: 80
+          id: 13
+          text: text
+        name: vlhkomer
+        max_value: 5.962133916683182
+      properties:
+        name:
+          example: vlhkomer
+          type: string
+        uid:
+          example: 12adc021980cbfe9
+          type: string
+        type_id:
+          $ref: '#/components/schemas/AppType'
+        level:
+          type: number
+        min_value:
+          type: number
+        max_value:
+          type: number
+      required:
+      - uid
+      type: object
+    AppType:
+      example:
+        type2_id:
+          text: text
+          type1: 12
+        type3: 2
+        minimalValue: -20
+        type1_id:
+          unit: hmotnost
+          text: text
+          type1: 11
+          unitSI: kg
+        maximalValue: 80
+        id: 13
+        text: text
+      properties:
+        id:
+          example: 13
+          format: uuid
+          type: number
+        type1_id:
+          $ref: '#/components/schemas/AppTypeGroup1'
+        type2_id:
+          $ref: '#/components/schemas/AppTypeGroup2'
+        type3:
+          example: 2
+          type: number
+        text:
+          example: text
+          type: string
+        minimalValue:
+          example: -20
+          type: number
+        maximalValue:
+          example: 80
+          type: number
+      required:
+      - id
+      type: object
+    AppTypeGroup1:
+      example:
+        unit: hmotnost
+        text: text
+        type1: 11
+        unitSI: kg
+      properties:
+        type1:
+          example: 11
+          format: uuid
+          type: number
+        text:
+          example: text
+          type: string
+        unit:
+          example: hmotnost
+          type: string
+        unitSI:
+          example: kg
+          type: string
+      required:
+      - text
+      - type1
+      - unit
+      - unitSI
+      type: object
+    AppTypeGroup2:
+      example:
+        text: text
+        type1: 12
+      properties:
+        type1:
+          example: 12
+          format: uuid
+          type: number
+        text:
+          example: text
+          type: string
+      type: object
+    LoginUserObject:
+      example:
+        JWT: JIOIJH.ADSPIDUSAP.SJDOASID
+        user:
+          password: asfas54f5as4fasf4a6s54fa
+          firstname: Juraj
+          companies:
+          - zipCode: 91724
+            country: Slovakia
+            address: Bottova 10
+            userRights:
+              companyId: 12
+              id: 1
+              position: CEO
+              userId: 1
+            city: Trnava
+            phone: 9012 548 951
+            name: MTF
+            id: 10
+            jwtSecret1: fasasvap24
+            email: juraj.dudak@stuba.sk
+            enabled: 1
+            applications:
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+          - zipCode: 91724
+            country: Slovakia
+            address: Bottova 10
+            userRights:
+              companyId: 12
+              id: 1
+              position: CEO
+              userId: 1
+            city: Trnava
+            phone: 9012 548 951
+            name: MTF
+            id: 10
+            jwtSecret1: fasasvap24
+            email: juraj.dudak@stuba.sk
+            enabled: 1
+            applications:
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+            - schema: http
+              applicaton: mtf.nsoric.com
+              server:
+                endpoint: api2
+                apiPort: 81
+                thisInstance: 1
+                name: saturn
+                id: 8
+                apiSchema: https
+              name: home measurement
+              host: dudak.nsoric.com
+              dbUser: server_user
+              dbHost: localhost
+              jwtSecret2: KJHGFFTYUJHBV
+              enabled: 1
+              dbPassword: SECRET_DB_PASSWORD
+          surname: Ďuďák
+          id: 1
+          isAdmin: 1
+          login: juraj.dudak
+          enabled: 1
+      properties:
+        user:
+          $ref: '#/components/schemas/LoginUser'
+        JWT:
+          description: JWT token
+          example: JIOIJH.ADSPIDUSAP.SJDOASID
+          type: string
+      type: object
+    StateResponse:
+      example:
+        message: The reason for this response
+        status: true
+      properties:
+        status:
+          description: fail/succes of the operation
+          example: true
+          type: boolean
+        message:
+          description: human readable message
+          example: The reason for this response
+          type: string
+      type: object
+    inline_object:
+      properties:
+        id_user:
+          example: 1
+          type: number
+        id_company:
+          example: 10
+          type: number
+      type: object
+  securitySchemes:
+    BasicAuth:
+      scheme: basic
+      type: http

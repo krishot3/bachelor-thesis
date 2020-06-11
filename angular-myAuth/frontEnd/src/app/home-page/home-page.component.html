@@ -1,0 +1,55 @@
+<p class="pAuth">{{typeAuth}}</p>
+<div class="row">
+<div class="btnInptFlex">
+   <input class="form-control mr-sm-2" type="number" [(ngModel)]="getId" value="0" name="id" required>
+   <button class="btn button-custom my-2 my-sm-0" type="button" (click)="getDataApp()">Get</button>
+</div>
+</div>
+<div class="widthCls">
+<h3>App Table</h3>
+   <table class="table">
+      <thead>
+        <tr>
+         <th *ngFor="let column of headers">{{column}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- <tr *ngFor="let data of dataApps">
+         <td *ngFor="let item of data | keyvalue">{{item.value}}</td>
+      </tr> -->
+      <tr *ngFor="let data of dataApps">
+         <td>{{data.id}}</td>
+         <td>{{data.name}}</td>
+         <td>{{data.host}}</td>
+         <!-- <td>{{data.description}}</td> -->
+         <td>{{data.db_host}}</td>
+         <td>{{data.db_user}}</td>
+         <!-- <td>{{data.db_password}}</td> -->
+         <td>{{data.db_name}}</td>
+         <!-- <td>{{data.jwt_secret2}}</td> -->
+         <td>{{data.company_id}}</td>
+         <!-- <td>{{data.enabled}}</td> -->
+         <td>{{data.server_id}}</td>
+      </tr>
+      </tbody>
+    </table>
+<h3>Server Table</h3>
+   <table class="table table-dark">
+      <thead>
+        <tr>
+          <th *ngFor="let column of headers2">{{column}}</th>
+        </tr>
+      </thead>
+      <tbody>
+         <tr *ngFor="let data of dataServers">
+         <td>{{data.id}}</td>
+         <td>{{data.name}}</td>
+         <td>{{data.apiSchema}}</td>
+         <td>{{data.apiPort}}</td>
+         <td>{{data.apiEndpoint}}</td>
+         <td>{{data.thisInstance}}</td>
+         </tr>
+      </tbody>
+    </table>
+   </div>
+

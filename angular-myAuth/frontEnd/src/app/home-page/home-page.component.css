@@ -1,0 +1,15 @@
+
+input[type=number] {
+    -moz-appearance:textfield;
+  }
+
+.btnInptFlex {
+    display: flex;
+}
+
+.row {
+    justify-content: center;
+    margin-top: 30px;
+}
+
+

@@ -1,0 +1,46 @@
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+  <div class="container">
+  <a class="navbar-brand" href="#">SAPI</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" 
+  aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav ml-auto">
+        <a class="nav-link" *ngIf="!_authService.basicLoggedIn() && !_authService.jwtLoggedIn() && !_authService.apikLoggedIn() && !isAuthenticated" 
+        routerLink="/basicauth" routerLinkActive="active">Basic-Auth</a>
+
+        <a class="nav-link" *ngIf="!_authService.basicLoggedIn() && !_authService.jwtLoggedIn() && !_authService.apikLoggedIn() && !isAuthenticated" 
+        routerLink="/jwt" routerLinkActive="active">JWT</a>
+
+        <a class="nav-link" *ngIf="!_authService.basicLoggedIn() && !_authService.jwtLoggedIn() && !_authService.apikLoggedIn() && !isAuthenticated" 
+        routerLink="/apikey" routerLinkActive="active">API-Key</a>
+
+        <a class="nav-link" routerLinkActive="active" style="cursor:pointer" 
+        *ngIf="!_authService.basicLoggedIn() && !_authService.jwtLoggedIn() && !_authService.apikLoggedIn() && !isAuthenticated" (click)="login()">OAuth</a>
+
+        <a class="nav-link" routerLink="/homepage" 
+        routerLinkActive="active" *ngIf="_authService.basicLoggedIn() || _authService.jwtLoggedIn() || _authService.apikLoggedIn() || isAuthenticated">Home</a>
+
+        <a class="nav-link" routerLink="/page" 
+        routerLinkActive="active" *ngIf="_authService.basicLoggedIn() || _authService.jwtLoggedIn() || _authService.apikLoggedIn() || isAuthenticated">Apps</a>
+
+        <a class="nav-link" style="cursor:pointer" *ngIf="_authService.basicLoggedIn()" 
+        (click)="_authService.loggedOutBasic()">Logout</a>
+
+        <a class="nav-link" style="cursor:pointer" *ngIf="_authService.jwtLoggedIn()" 
+        (click)="_authService.loggedOutJwt()">Logout</a>
+
+        <a class="nav-link" style="cursor:pointer" *ngIf="_authService.apikLoggedIn()" 
+        (click)="_authService.apiKeyLogout()">Logout</a>
+
+        <a class="nav-link" style="cursor:pointer" routerLinkActive="active" *ngIf="isAuthenticated" (click)="logout()">Logout</a>
+
+    </ul>
+  </div>
+</div>
+</nav>
+<div class="container">
+<router-outlet></router-outlet>            
+</div>
