@@ -4,7 +4,7 @@ API authentication project for bachelor thesis at [Faculty of Materials Science 
 
 ## Built With
 
-- [Angular]([https://github.com/nestjs/nest](https://angular.io)
+- [Angular](https://angular.io)
 - [Node.js](https://github.com/nodejs/node)
 - [Express.js](https://expressjs.com)
 - [TypeScript](https://github.com/microsoft/TypeScript)
